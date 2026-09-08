@@ -164,7 +164,7 @@ function SimulatorPage() {
             running={status === "running"}
             speed={speed}
             dam={dam}
-            selected={selected ?? (dam && statsOpen ? null : null)}
+            selected={selected}
             layers={layers}
             command={command}
             onPick={handlePick}
