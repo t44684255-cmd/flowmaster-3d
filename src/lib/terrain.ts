@@ -42,8 +42,8 @@ export type Vec3 = [number, number, number];
 export function streamline(
   startX: number,
   startZ: number,
-  steps = 260,
-  stepSize = 0.7,
+  steps = 420,
+  stepSize = 1.15,
 ): Vec3[] {
   const pts: Vec3[] = [];
   let x = startX;
@@ -56,12 +56,12 @@ export function streamline(
     pts.push([x, y, z]);
     const { dx, dz } = gradientAt(x, z);
     const len = Math.hypot(dx, dz);
-    if (len < 0.0025 && i > 12) break;
+    if (len < 0.0015 && i > 20) break;
     // momentum keeps the stream from stalling in shallow pockets
-    vx = vx * 0.62 - (dx / (len + 0.001)) * stepSize;
-    vz = vz * 0.62 - (dz / (len + 0.001)) * stepSize;
-    x += vx * 0.55;
-    z += vz * 0.55;
+    vx = vx * 0.78 - (dx / (len + 0.001)) * stepSize;
+    vz = vz * 0.78 - (dz / (len + 0.001)) * stepSize;
+    x += vx * 0.45;
+    z += vz * 0.45;
     if (Math.abs(x) > half || Math.abs(z) > half) break;
   }
   return pts;
@@ -71,8 +71,8 @@ export function streamline(
 export function flowNetwork(
   originX: number,
   originZ: number,
-  count = 46,
-  spread = 5.5,
+  count = 54,
+  spread = 7.5,
 ): Vec3[][] {
   const lines: Vec3[][] = [];
   for (let i = 0; i < count; i++) {

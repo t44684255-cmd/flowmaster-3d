@@ -17,7 +17,7 @@ function ramp(t: number, contours: boolean) {
   else c.copy(ROCK).lerp(SNOW, (t - 0.78) / 0.22);
   if (contours) {
     const band = Math.abs(Math.sin(t * Math.PI * 12));
-    if (band > 0.97) c.lerp(new THREE.Color("#63e8ff"), 0.22);
+    if (band > 0.988) c.lerp(new THREE.Color("#9fe9f7"), 0.3);
   }
   return c;
 }

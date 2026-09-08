@@ -39,7 +39,7 @@ export const Route = createFileRoute("/")({
   component: SimulatorPage,
 });
 
-const DEFAULT_DAM: Marker = { x: -14, z: -22, y: heightAt(-14, -22) };
+const DEFAULT_DAM: Marker = { x: -26, z: -30, y: heightAt(-26, -30) };
 
 function SimulatorPage() {
   const [params, setParams] = useState<SimParams>(DEFAULT_PARAMS);
