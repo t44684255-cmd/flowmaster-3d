@@ -37,7 +37,7 @@ export function TerrainMesh({ wireframe, contours, onPick }: Props) {
       TERRAIN_SEGMENTS,
     );
     geo.rotateX(-Math.PI / 2);
-    const pos = geo.attributes.position as THREE.BufferAttribute;
+    const pos = geo.attributes["position"] as THREE.BufferAttribute;
     let min = Infinity;
     let max = -Infinity;
     for (let i = 0; i < pos.count; i++) {
