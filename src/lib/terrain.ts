@@ -87,7 +87,9 @@ export function flowNetwork(
 export function pathLengthMeters(pts: Vec3[]): number {
   let d = 0;
   for (let i = 1; i < pts.length; i++) {
-    d += Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][2] - pts[i - 1][2]);
+    const a = pts[i - 1]!;
+    const b = pts[i]!;
+    d += Math.hypot(b[0] - a[0], b[2] - a[2]);
   }
   return d * METERS_PER_UNIT;
 }
