@@ -20,7 +20,7 @@ export function Header({
         <div className="leading-tight">
           <h1 className="text-sm font-semibold tracking-tight">3D Water Flow Simulator</h1>
           <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-            Alpine Valley DEM · 25 m grid
+            Cesium World Terrain · Bhagirathi valley
           </p>
         </div>
       </div>
