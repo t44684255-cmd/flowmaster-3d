@@ -100,7 +100,7 @@ export function GlobeScene(props: Props) {
 
         // Imagery: Ion world imagery, falling back to OpenStreetMap.
         try {
-          const imagery = await Cesium.IonImageryProvider.fromAssetId(3);
+          const imagery = await Cesium.IonImageryProvider.fromAssetId(2);
           if (!cancelled) {
             viewer.imageryLayers.removeAll();
             viewer.imageryLayers.addImageryProvider(imagery);
@@ -460,7 +460,7 @@ function flyTo(
   duration: number,
 ) {
   viewer.camera.flyTo({
-    destination: Cesium.Cartesian3.fromDegrees(lon - 0.045, lat - 0.05, height + 5200),
+    destination: Cesium.Cartesian3.fromDegrees(lon - 0.075, lat - 0.09, height + 9500),
     orientation: {
       heading: Cesium.Math.toRadians(35),
       pitch: Cesium.Math.toRadians(-32),
