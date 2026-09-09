@@ -1,4 +1,3 @@
-import { elevationMeters, pathLengthMeters, type Vec3 } from "./terrain";
 
 export type SimStatus = "idle" | "running" | "paused" | "finished";
 
@@ -51,8 +50,8 @@ export interface SimStats {
 export function computeStats(
   params: SimParams,
   progress: number, // 0..1 through the simulated timeline
-  dam: DamSite | null,
-  network: Vec3[][],
+  dam: { height: number } | null,
+  longestMeters: number,
 ): SimStats {
   const p = Math.max(0, Math.min(1, progress));
   const vol = params.reservoirVolume;
@@ -66,10 +65,7 @@ export function computeStats(
   const meanV = (1 / params.roughness) * 0.048 * slopeFactor;
   const frontV = meanV * 1.42;
 
-  const longest = network.reduce(
-    (m, l) => Math.max(m, pathLengthMeters(l)),
-    0,
-  );
+  const longest = longestMeters;
   const travelled = (longest / 1000) * Math.min(1, p * 1.25);
   const width = params.breachWidth * (1.6 + p * 2.4);
   const area = (travelled * 1000 * width) / 1e6;
@@ -87,7 +83,7 @@ export function computeStats(
     maxDepth: depth,
     travelDistance: travelled,
     arrivalTime: arrival,
-    crestElevation: dam ? elevationMeters(dam.y) : 0,
+    crestElevation: dam ? Math.round(dam.height) : 0,
     froude,
     cellsWet: Math.round((area * 1e6) / (params.resolution * params.resolution)),
     reynolds: (frontV * Math.max(depth, 0.6)) / 1.05e-6,
