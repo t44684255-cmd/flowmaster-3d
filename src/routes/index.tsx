@@ -1,13 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Header } from "@/components/sim/Header";
 import { ControlPanel } from "@/components/sim/ControlPanel";
 import { StatsPanel } from "@/components/sim/StatsPanel";
 import { Timeline } from "@/components/sim/Timeline";
 import { MapControls, type Layers } from "@/components/sim/MapControls";
-import { Scene, type ViewCommand } from "@/components/sim/Scene";
-import type { Marker } from "@/components/sim/DamMarker";
-import { flowNetwork, heightAt } from "@/lib/terrain";
+import { GlobeScene, type ViewCommand } from "@/components/sim/GlobeScene";
+import { DAM_SITE, type GeoPoint } from "@/lib/geo";
 import {
   DEFAULT_PARAMS,
   computeStats,
@@ -24,13 +23,13 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Interactive 3D dam-breach and water flow simulator: place a dam on mountainous terrain, run flood routing, and read live hydraulic statistics.",
+          "Interactive 3D dam-breach and water flow simulator on a real satellite globe: place a dam on real terrain, run flood routing, and read live hydraulic statistics.",
       },
       { property: "og:title", content: "3D Water Flow Simulator" },
       {
         property: "og:description",
         content:
-          "Place a dam on 3D mountainous terrain and watch simulated flood water route downhill with live hydraulic statistics.",
+          "Place a dam on real 3D terrain and watch simulated flood water route downhill with live hydraulic statistics.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -39,18 +38,24 @@ export const Route = createFileRoute("/")({
   component: SimulatorPage,
 });
 
-const DEFAULT_DAM: Marker = { x: -26, z: -30, y: heightAt(-26, -30) };
+const DEFAULT_DAM: GeoPoint = {
+  lon: DAM_SITE.lon,
+  lat: DAM_SITE.lat,
+  height: DAM_SITE.height,
+  slope: 24,
+};
 
 function SimulatorPage() {
   const [params, setParams] = useState<SimParams>(DEFAULT_PARAMS);
-  const [dam, setDam] = useState<Marker | null>(DEFAULT_DAM);
-  const [selected, setSelected] = useState<Marker | null>(null);
+  const [dam, setDam] = useState<GeoPoint | null>(DEFAULT_DAM);
+  const [selected, setSelected] = useState<GeoPoint | null>(null);
   const [status, setStatus] = useState<SimStatus>("idle");
   const [minutes, setMinutes] = useState(0);
   const [speed, setSpeed] = useState<Speed>(1);
   const [statsOpen, setStatsOpen] = useState(true);
   const [nav, setNav] = useState("Simulation");
   const [history, setHistory] = useState<number[]>([]);
+  const [longest, setLongest] = useState(0);
   const [command, setCommand] = useState<ViewCommand>({ type: "reset", n: 0 });
   const [layers, setLayers] = useState<Layers>({
     wireframe: false,
@@ -60,16 +65,8 @@ function SimulatorPage() {
     reservoir: true,
   });
 
-  const network = useMemo(
-    () => (dam ? flowNetwork(dam.x, dam.z) : []),
-    [dam],
-  );
-
   const progress = params.duration > 0 ? minutes / params.duration : 0;
-  const stats = useMemo(
-    () => computeStats(params, progress, dam, network),
-    [params, progress, dam, network],
-  );
+  const stats = computeStats(params, progress, dam, longest);
 
   // Timeline clock
   const raf = useRef<number | null>(null);
@@ -81,7 +78,6 @@ function SimulatorPage() {
       const dt = Math.min(now - last.current, 100) / 1000;
       last.current = now;
       setMinutes((m) => {
-        // 1 real second = 1 simulated minute at 1x
         const next = m + dt * speed;
         if (next >= params.duration) {
           setStatus("finished");
@@ -106,10 +102,7 @@ function SimulatorPage() {
     return () => clearInterval(id);
   }, [status, stats.peakDischarge]);
 
-  const handlePick = useCallback(
-    (p: Marker) => setSelected({ x: p.x, y: p.y, z: p.z }),
-    [],
-  );
+  const handlePick = useCallback((p: GeoPoint) => setSelected(p), []);
 
   const useAsDam = useCallback(() => {
     if (!selected) return;
@@ -158,21 +151,21 @@ function SimulatorPage() {
         />
 
         <main className="relative min-h-[55vh] flex-1">
-          <Scene
-            network={network}
-            progress={progress}
-            running={status === "running"}
-            speed={speed}
+          <GlobeScene
             dam={dam}
             selected={selected}
             layers={layers}
+            progress={progress}
+            running={status === "running"}
+            speed={speed}
             command={command}
             onPick={handlePick}
             onUseAsDam={useAsDam}
             onClosePopup={() => setSelected(null)}
+            onNetwork={setLongest}
           />
 
-          <div className="pointer-events-none absolute inset-0">
+          <div className="pointer-events-none absolute inset-0 z-10">
             <MapControls
               layers={layers}
               onToggle={(k) => setLayers((l) => ({ ...l, [k]: !l[k] }))}
@@ -181,9 +174,11 @@ function SimulatorPage() {
             />
 
             <div className="pointer-events-none absolute bottom-4 left-4 rounded-md border border-border bg-card/85 px-3 py-2 font-mono text-[10px] leading-relaxed text-muted-foreground backdrop-blur">
-              <div className="text-foreground">Alpine Valley · synthetic DEM</div>
+              <div className="text-foreground">
+                {DAM_SITE.name} · {DAM_SITE.region}
+              </div>
               <div>
-                grid {params.resolution} m · vertical exag. 1.4× · click terrain to sample
+                Cesium World Terrain · satellite imagery · click the map to sample
               </div>
             </div>
 
