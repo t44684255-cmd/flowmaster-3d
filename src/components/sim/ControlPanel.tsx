@@ -11,8 +11,7 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { DEFAULT_PARAMS, type SimParams } from "@/lib/simulation";
-import { elevationMeters, slopeDegrees } from "@/lib/terrain";
-import type { Marker } from "./DamMarker";
+import { formatLat, formatLon, landCover, type GeoPoint } from "@/lib/geo";
 import type { Layers } from "./MapControls";
 
 interface FieldProps {
@@ -112,7 +111,7 @@ function Toggle({
 interface Props {
   params: SimParams;
   onParams: (p: Partial<SimParams>) => void;
-  dam: Marker | null;
+  dam: GeoPoint | null;
   layers: Layers;
   onToggleLayer: (k: keyof Layers) => void;
   locked: boolean;
@@ -136,23 +135,29 @@ export function ControlPanel({
         {dam ? (
           <dl className="mt-2 space-y-1 rounded-md border border-border bg-background/40 p-2.5 font-mono text-[11px]">
             <div className="flex justify-between">
+              <dt className="text-muted-foreground">Latitude</dt>
+              <dd>{formatLat(dam.lat)}</dd>
+            </div>
+            <div className="flex justify-between">
+              <dt className="text-muted-foreground">Longitude</dt>
+              <dd>{formatLon(dam.lon)}</dd>
+            </div>
+            <div className="flex justify-between">
               <dt className="text-muted-foreground">Crest elev.</dt>
-              <dd>{elevationMeters(dam.y)} m</dd>
+              <dd>{dam.height.toFixed(0)} m</dd>
             </div>
             <div className="flex justify-between">
               <dt className="text-muted-foreground">Slope</dt>
-              <dd>{slopeDegrees(dam.x, dam.z).toFixed(1)}°</dd>
+              <dd>{dam.slope.toFixed(1)}°</dd>
             </div>
             <div className="flex justify-between">
-              <dt className="text-muted-foreground">Grid ref</dt>
-              <dd>
-                {(412300 + dam.x * 25).toFixed(0)}E / {(5148700 + dam.z * 25).toFixed(0)}N
-              </dd>
+              <dt className="text-muted-foreground">Cover</dt>
+              <dd>{landCover(dam.height)}</dd>
             </div>
           </dl>
         ) : (
           <p className="mt-2 rounded-md border border-dashed border-border p-3 text-[11px] leading-relaxed text-muted-foreground">
-            Click anywhere on the terrain to sample a point, then choose{" "}
+            Click anywhere on the map to sample a point, then choose{" "}
             <span className="text-foreground">Use as dam location</span>.
           </p>
         )}
